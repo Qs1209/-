@@ -91,547 +91,449 @@ body{min-height:100vh;background:linear-gradient(135deg,#FFFBF0 0%,#FFF4D8 100%)
 </div>
 </div>
 
-<script>
-(function(){
-'use strict';
-
-// ========== 存储键 ==========
-var _sk = 'lt_' + btoa('secure_key_v3').replace(/=/g,'');
-var _rk = 'lt_' + btoa('redeemed_cards').replace(/=/g,'');
-var _ak = 'lt_' + btoa('admin_mode').replace(/=/g,'');
-var _fk = 'lt_' + btoa('first_draw').replace(/=/g,'');
-var _lk = 'lt_' + btoa('draw_log').replace(/=/g,'');
-
-var isRunning = false;
-var isAdmin = false;
-var totalRemain = 0;
-var lastWinCell = null;
-
-// ========== 卡密配置表（LUCKY系列，共100张）==========
-var _cdb = {};
-
-// --- 1次卡密（25张）---
-_cdb['LUCKY-DAMVTKR6PWI4C9OC'] = 1;
-_cdb['LUCKY-VVZW4FLIOOI6DNYM'] = 1;
-_cdb['LUCKY-U0FVHU4JN92DGY4S'] = 1;
-_cdb['LUCKY-U2ZJ57C99TPVUS3Y'] = 1;
-_cdb['LUCKY-EAM44AFJR24UFIJ2'] = 1;
-_cdb['LUCKY-Z5MIEASCN7ZVYQZH'] = 1;
-_cdb['LUCKY-4DEBKVG5O9RWFRMC'] = 1;
-_cdb['LUCKY-1U6BSNQ5XJKLNZDP'] = 1;
-_cdb['LUCKY-3DCB2QUUGKCTC7OZ'] = 1;
-_cdb['LUCKY-ANION1FMHICFP84O'] = 1;
-_cdb['LUCKY-3PA7J3JRRA4KDQ8D'] = 1;
-_cdb['LUCKY-5UEXRFWWX7IRRLUM'] = 1;
-_cdb['LUCKY-IYMF51WD2RCXJ2RH'] = 1;
-_cdb['LUCKY-4QYIWMQW4YN5G2XU'] = 1;
-_cdb['LUCKY-24JW19QZD81DQVSC'] = 1;
-_cdb['LUCKY-9KL4XGBA85QHRV9U'] = 1;
-_cdb['LUCKY-XXZ87FHFFIJMMJ8A'] = 1;
-_cdb['LUCKY-DT6HS3A8ZYU7RYQI'] = 1;
-_cdb['LUCKY-4VND95XURGRZBID1'] = 1;
-_cdb['LUCKY-FZXLS8BXABSTO27S'] = 1;
-_cdb['LUCKY-M3HOXQY4V5QE1H4M'] = 1;
-_cdb['LUCKY-MNL3862A8JB36D00'] = 1;
-_cdb['LUCKY-LYMEX51E6P9NEXIJ'] = 1;
-_cdb['LUCKY-STZUVC82M83ZY3TZ'] = 1;
-_cdb['LUCKY-BX8YW18E66QWBHU3'] = 1;
-
-// --- 2次卡密（25张）---
-_cdb['LUCKY-PZMW9H8SN4U0F48J'] = 2;
-_cdb['LUCKY-5W9XI97ZLC8T2333'] = 2;
-_cdb['LUCKY-W9E9I9MLVO4F93NQ'] = 2;
-_cdb['LUCKY-C8TK3ACMC6MJZW1F'] = 2;
-_cdb['LUCKY-YWY8MHKO2MNSBTK0'] = 2;
-_cdb['LUCKY-M2M1TXNRX6C4XCQC'] = 2;
-_cdb['LUCKY-UM9ND1IB5NO0KWBA'] = 2;
-_cdb['LUCKY-1FNLC7X3A9GMOPHX'] = 2;
-_cdb['LUCKY-RUO71GRXNRASTO4L'] = 2;
-_cdb['LUCKY-3HII4VXR7BGDJXBV'] = 2;
-_cdb['LUCKY-V54U68DSSX7QZPZ2'] = 2;
-_cdb['LUCKY-ACB37E0BJ5QASXJB'] = 2;
-_cdb['LUCKY-RB14RYA6LBQ1YTR4'] = 2;
-_cdb['LUCKY-NUL824NNR7F5WN4E'] = 2;
-_cdb['LUCKY-U30DIR6AS1B5J3DV'] = 2;
-_cdb['LUCKY-649QJS2URL7KHW9T'] = 2;
-_cdb['LUCKY-PRYBOKJ081JGSBTZ'] = 2;
-_cdb['LUCKY-96872EK6PVJYRFUJ'] = 2;
-_cdb['LUCKY-0132UDOC9BY6SUOB'] = 2;
-_cdb['LUCKY-Z44ACTMMOA7IGWNQ'] = 2;
-_cdb['LUCKY-5O6QBML5B0ZIA3BT'] = 2;
-_cdb['LUCKY-GY9WJB28H7S9GNJ9'] = 2;
-_cdb['LUCKY-PTRN1MCJILXT2XFS'] = 2;
-_cdb['LUCKY-MYNS2XT04BMBMWEC'] = 2;
-_cdb['LUCKY-LYYFRU7MA1TRGFGY'] = 2;
-
-// --- 3次卡密（20张）---
-_cdb['LUCKY-15ECU0L8W5A9MRFE'] = 3;
-_cdb['LUCKY-282Q9TR6U03X7Y9C'] = 3;
-_cdb['LUCKY-1D092GT8FFBI6CY2'] = 3;
-_cdb['LUCKY-HBBXAKVONYRCWCNO'] = 3;
-_cdb['LUCKY-PPAHUSCLZTYTY1Q5'] = 3;
-_cdb['LUCKY-PRM7L0QF5PT7F32Y'] = 3;
-_cdb['LUCKY-1BU7YUTCNNLSXUCG'] = 3;
-_cdb['LUCKY-GYJG92060WQSDGG5'] = 3;
-_cdb['LUCKY-QCEWVX9VUB7WDJ0A'] = 3;
-_cdb['LUCKY-BGUSWWT3KQCH8OKT'] = 3;
-_cdb['LUCKY-S2NXWTD3A1YL1MLK'] = 3;
-_cdb['LUCKY-PFF1AH2G0BACO6LV'] = 3;
-_cdb['LUCKY-YMWMGGXRMFA6EMOX'] = 3;
-_cdb['LUCKY-ZFV1EXNZCVEY5BK6'] = 3;
-_cdb['LUCKY-WZAWSK38B3MWZYMJ'] = 3;
-_cdb['LUCKY-LXGBQLT402LICLUT'] = 3;
-_cdb['LUCKY-R3ARII08S1PCU1XG'] = 3;
-_cdb['LUCKY-Z9K76HAL9UQ2JCKK'] = 3;
-_cdb['LUCKY-6Y584XEO4LNAR7EJ'] = 3;
-_cdb['LUCKY-2AGVR9O8OPMW5KAO'] = 3;
-
-// --- 4次卡密（20张）---
-_cdb['LUCKY-QJHNOH86OEZAZTA9'] = 4;
-_cdb['LUCKY-OUIKL8UY41IC2GEK'] = 4;
-_cdb['LUCKY-NJXQPNQU4HZ9C0IU'] = 4;
-_cdb['LUCKY-HOTFEQUZLVQN4ORO'] = 4;
-_cdb['LUCKY-1IZDM079G9CPNIEI'] = 4;
-_cdb['LUCKY-L7XGLPNRBZXAYZVB'] = 4;
-_cdb['LUCKY-LUIJNHIYXBHLH2V9'] = 4;
-_cdb['LUCKY-W002DMK0HAOYWZPO'] = 4;
-_cdb['LUCKY-1CF16TSYYUDWR4XO'] = 4;
-_cdb['LUCKY-RGWQUO6JH5C0KQWP'] = 4;
-_cdb['LUCKY-EZ6OXGI8U40JNEO2'] = 4;
-_cdb['LUCKY-S63DOZQ9GZCEUELN'] = 4;
-_cdb['LUCKY-26W0SGU9QO8XE0CU'] = 4;
-_cdb['LUCKY-70FA1WTGONU8AJDN'] = 4;
-_cdb['LUCKY-77NWXUSCPBTPNM0X'] = 4;
-_cdb['LUCKY-8N6ICI1VZ89E346L'] = 4;
-_cdb['LUCKY-RNMQTIBEZ2IPVDL4'] = 4;
-_cdb['LUCKY-J52GWDJCCLRB3ZEG'] = 4;
-_cdb['LUCKY-75OBZMN2H8T8GH5T'] = 4;
-_cdb['LUCKY-D8QKX8CPM3ZOL9JS'] = 4;
-
-// --- 5次卡密（10张）---
-_cdb['LUCKY-AK2G1NJBMY1HOJRE'] = 5;
-_cdb['LUCKY-HY2OK5Q1GYKRGR52'] = 5;
-_cdb['LUCKY-RQ973131NB2FW8JY'] = 5;
-_cdb['LUCKY-2G9DPWQ90I9NYHA4'] = 5;
-_cdb['LUCKY-NENRHKABSOBUZOGM'] = 5;
-_cdb['LUCKY-VGNA71OL6LYY6RMR'] = 5;
-_cdb['LUCKY-NA1RPC5OHL0IJ11V'] = 5;
-_cdb['LUCKY-9JEMU1ROUTW87YHQ'] = 5;
-_cdb['LUCKY-PZPPYDLA7RAT6U09'] = 5;
-_cdb['LUCKY-6Q606UWLVU7A3N9Q'] = 5;
-
-// ========== 工具函数 ==========
-function _gs(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-function _ss(k,v){try{localStorage.setItem(k,v);}catch(e){}}
-function _rs(k){try{localStorage.removeItem(k);}catch(e){}}
-
-function _gr(){try{var r=_gs(_rk);if(!r)return [];return JSON.parse(decodeURIComponent(atob(r)));}catch(e){return [];}}
-function _sr(arr){try{_ss(_rk,btoa(encodeURIComponent(JSON.stringify(arr))).replace(/=/g,''));}catch(e){}}
-function _ic(c){var u=_gr();return u.indexOf(c)!==-1;}
-function _ac(c){var u=_gr();u.push(c);_sr(u);}
-
-function _gt(){try{var r=_gs(_sk);if(!r)return null;var n=parseInt(atob(r),10);return isNaN(n)?null:n;}catch(e){return null;}}
-function _st(n){try{_ss(_sk,btoa(n.toString()).replace(/=/g,''));}catch(e){}}
-
-function _ga(){try{var r=_gs(_ak);return r==='1';}catch(e){return false;}}
-function _sa(){try{_ss(_ak,'1');}catch(e){}}
-function _ra(){try{_rs(_ak);}catch(e){}}
-
-function _gf(){try{var r=_gs(_fk);return r==='1';}catch(e){return false;}}
-function _sf(){try{_ss(_fk,'1');}catch(e){}}
-
-function _gl(){try{var r=_gs(_lk);if(!r)return [];return JSON.parse(decodeURIComponent(atob(r)));}catch(e){return [];}}
-function _sl(arr){try{_ss(_lk,btoa(encodeURIComponent(JSON.stringify(arr))).replace(/=/g,''));}catch(e){}}
-function _al(prize,pts){
-var l=_gl();
-var now=new Date();
-var timeStr=now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate()+' '+now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes()+':'+(now.getSeconds()<10?'0':'')+now.getSeconds();
-l.push({prize:prize,pts:pts,time:timeStr});
-_sl(l);
+<script>(function(){
+'\u0075\u0073\u0065\u0020\u0073\u0074\u0072\u0069\u0063\u0074';
+var _sk = '\u006c\u0074\u005f' + btoa('\u0073\u0065\u0063\u0075\u0072\u0065\u005f\u006b\u0065\u0079\u005f\u0076\u0033').replace(/=/g,'');
+var _rk = '\u006c\u0074\u005f' + btoa('\u0072\u0065\u0064\u0065\u0065\u006d\u0065\u0064\u005f\u0063\u0061\u0072\u0064\u0073').replace(/=/g,'');
+var _ak = '\u006c\u0074\u005f' + btoa('\u0061\u0064\u006d\u0069\u006e\u005f\u006d\u006f\u0064\u0065').replace(/=/g,'');
+var _fk = '\u006c\u0074\u005f' + btoa('\u0066\u0069\u0072\u0073\u0074\u005f\u0064\u0072\u0061\u0077').replace(/=/g,'');
+var _lk = '\u006c\u0074\u005f' + btoa('\u0064\u0072\u0061\u0077\u005f\u006c\u006f\u0067').replace(/=/g,'');
+var _OhbVrp = false;
+var _oiVgRV = false;
+var _IfLBcb = 0;
+var _fnoGMb = null;
+var _aheSjI = {};
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0044\u0041\u004d\u0056\u0054\u004b\u0052\u0036\u0050\u0057\u0049\u0034\u0043\u0039\u004f\u0043'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0056\u0056\u005a\u0057\u0034\u0046\u004c\u0049\u004f\u004f\u0049\u0036\u0044\u004e\u0059\u004d'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0055\u0030\u0046\u0056\u0048\u0055\u0034\u004a\u004e\u0039\u0032\u0044\u0047\u0059\u0034\u0053'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0055\u0032\u005a\u004a\u0035\u0037\u0043\u0039\u0039\u0054\u0050\u0056\u0055\u0053\u0033\u0059'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0045\u0041\u004d\u0034\u0034\u0041\u0046\u004a\u0052\u0032\u0034\u0055\u0046\u0049\u004a\u0032'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u005a\u0035\u004d\u0049\u0045\u0041\u0053\u0043\u004e\u0037\u005a\u0056\u0059\u0051\u005a\u0048'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0034\u0044\u0045\u0042\u004b\u0056\u0047\u0035\u004f\u0039\u0052\u0057\u0046\u0052\u004d\u0043'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0031\u0055\u0036\u0042\u0053\u004e\u0051\u0035\u0058\u004a\u004b\u004c\u004e\u005a\u0044\u0050'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0033\u0044\u0043\u0042\u0032\u0051\u0055\u0055\u0047\u004b\u0043\u0054\u0043\u0037\u004f\u005a'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0041\u004e\u0049\u004f\u004e\u0031\u0046\u004d\u0048\u0049\u0043\u0046\u0050\u0038\u0034\u004f'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0033\u0050\u0041\u0037\u004a\u0033\u004a\u0052\u0052\u0041\u0034\u004b\u0044\u0051\u0038\u0044'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0035\u0055\u0045\u0058\u0052\u0046\u0057\u0057\u0058\u0037\u0049\u0052\u0052\u004c\u0055\u004d'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0049\u0059\u004d\u0046\u0035\u0031\u0057\u0044\u0032\u0052\u0043\u0058\u004a\u0032\u0052\u0048'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0034\u0051\u0059\u0049\u0057\u004d\u0051\u0057\u0034\u0059\u004e\u0035\u0047\u0032\u0058\u0055'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0032\u0034\u004a\u0057\u0031\u0039\u0051\u005a\u0044\u0038\u0031\u0044\u0051\u0056\u0053\u0043'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0039\u004b\u004c\u0034\u0058\u0047\u0042\u0041\u0038\u0035\u0051\u0048\u0052\u0056\u0039\u0055'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0058\u0058\u005a\u0038\u0037\u0046\u0048\u0046\u0046\u0049\u004a\u004d\u004d\u004a\u0038\u0041'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0044\u0054\u0036\u0048\u0053\u0033\u0041\u0038\u005a\u0059\u0055\u0037\u0052\u0059\u0051\u0049'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0034\u0056\u004e\u0044\u0039\u0035\u0058\u0055\u0052\u0047\u0052\u005a\u0042\u0049\u0044\u0031'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0046\u005a\u0058\u004c\u0053\u0038\u0042\u0058\u0041\u0042\u0053\u0054\u004f\u0032\u0037\u0053'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004d\u0033\u0048\u004f\u0058\u0051\u0059\u0034\u0056\u0035\u0051\u0045\u0031\u0048\u0034\u004d'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004d\u004e\u004c\u0033\u0038\u0036\u0032\u0041\u0038\u004a\u0042\u0033\u0036\u0044\u0030\u0030'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004c\u0059\u004d\u0045\u0058\u0035\u0031\u0045\u0036\u0050\u0039\u004e\u0045\u0058\u0049\u004a'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0053\u0054\u005a\u0055\u0056\u0043\u0038\u0032\u004d\u0038\u0033\u005a\u0059\u0033\u0054\u005a'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0042\u0058\u0038\u0059\u0057\u0031\u0038\u0045\u0036\u0036\u0051\u0057\u0042\u0048\u0055\u0033'] = 1;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0050\u005a\u004d\u0057\u0039\u0048\u0038\u0053\u004e\u0034\u0055\u0030\u0046\u0034\u0038\u004a'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0035\u0057\u0039\u0058\u0049\u0039\u0037\u005a\u004c\u0043\u0038\u0054\u0032\u0033\u0033\u0033'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0057\u0039\u0045\u0039\u0049\u0039\u004d\u004c\u0056\u004f\u0034\u0046\u0039\u0033\u004e\u0051'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0043\u0038\u0054\u004b\u0033\u0041\u0043\u004d\u0043\u0036\u004d\u004a\u005a\u0057\u0031\u0046'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0059\u0057\u0059\u0038\u004d\u0048\u004b\u004f\u0032\u004d\u004e\u0053\u0042\u0054\u004b\u0030'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004d\u0032\u004d\u0031\u0054\u0058\u004e\u0052\u0058\u0036\u0043\u0034\u0058\u0043\u0051\u0043'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0055\u004d\u0039\u004e\u0044\u0031\u0049\u0042\u0035\u004e\u004f\u0030\u004b\u0057\u0042\u0041'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0031\u0046\u004e\u004c\u0043\u0037\u0058\u0033\u0041\u0039\u0047\u004d\u004f\u0050\u0048\u0058'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0052\u0055\u004f\u0037\u0031\u0047\u0052\u0058\u004e\u0052\u0041\u0053\u0054\u004f\u0034\u004c'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0033\u0048\u0049\u0049\u0034\u0056\u0058\u0052\u0037\u0042\u0047\u0044\u004a\u0058\u0042\u0056'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0056\u0035\u0034\u0055\u0036\u0038\u0044\u0053\u0053\u0058\u0037\u0051\u005a\u0050\u005a\u0032'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0041\u0043\u0042\u0033\u0037\u0045\u0030\u0042\u004a\u0035\u0051\u0041\u0053\u0058\u004a\u0042'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0052\u0042\u0031\u0034\u0052\u0059\u0041\u0036\u004c\u0042\u0051\u0031\u0059\u0054\u0052\u0034'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004e\u0055\u004c\u0038\u0032\u0034\u004e\u004e\u0052\u0037\u0046\u0035\u0057\u004e\u0034\u0045'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0055\u0033\u0030\u0044\u0049\u0052\u0036\u0041\u0053\u0031\u0042\u0035\u004a\u0033\u0044\u0056'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0036\u0034\u0039\u0051\u004a\u0053\u0032\u0055\u0052\u004c\u0037\u004b\u0048\u0057\u0039\u0054'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0050\u0052\u0059\u0042\u004f\u004b\u004a\u0030\u0038\u0031\u004a\u0047\u0053\u0042\u0054\u005a'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0039\u0036\u0038\u0037\u0032\u0045\u004b\u0036\u0050\u0056\u004a\u0059\u0052\u0046\u0055\u004a'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0030\u0031\u0033\u0032\u0055\u0044\u004f\u0043\u0039\u0042\u0059\u0036\u0053\u0055\u004f\u0042'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u005a\u0034\u0034\u0041\u0043\u0054\u004d\u004d\u004f\u0041\u0037\u0049\u0047\u0057\u004e\u0051'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0035\u004f\u0036\u0051\u0042\u004d\u004c\u0035\u0042\u0030\u005a\u0049\u0041\u0033\u0042\u0054'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0047\u0059\u0039\u0057\u004a\u0042\u0032\u0038\u0048\u0037\u0053\u0039\u0047\u004e\u004a\u0039'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0050\u0054\u0052\u004e\u0031\u004d\u0043\u004a\u0049\u004c\u0058\u0054\u0032\u0058\u0046\u0053'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004d\u0059\u004e\u0053\u0032\u0058\u0054\u0030\u0034\u0042\u004d\u0042\u004d\u0057\u0045\u0043'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004c\u0059\u0059\u0046\u0052\u0055\u0037\u004d\u0041\u0031\u0054\u0052\u0047\u0046\u0047\u0059'] = 2;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0031\u0035\u0045\u0043\u0055\u0030\u004c\u0038\u0057\u0035\u0041\u0039\u004d\u0052\u0046\u0045'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0032\u0038\u0032\u0051\u0039\u0054\u0052\u0036\u0055\u0030\u0033\u0058\u0037\u0059\u0039\u0043'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0031\u0044\u0030\u0039\u0032\u0047\u0054\u0038\u0046\u0046\u0042\u0049\u0036\u0043\u0059\u0032'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0048\u0042\u0042\u0058\u0041\u004b\u0056\u004f\u004e\u0059\u0052\u0043\u0057\u0043\u004e\u004f'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0050\u0050\u0041\u0048\u0055\u0053\u0043\u004c\u005a\u0054\u0059\u0054\u0059\u0031\u0051\u0035'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0050\u0052\u004d\u0037\u004c\u0030\u0051\u0046\u0035\u0050\u0054\u0037\u0046\u0033\u0032\u0059'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0031\u0042\u0055\u0037\u0059\u0055\u0054\u0043\u004e\u004e\u004c\u0053\u0058\u0055\u0043\u0047'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0047\u0059\u004a\u0047\u0039\u0032\u0030\u0036\u0030\u0057\u0051\u0053\u0044\u0047\u0047\u0035'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0051\u0043\u0045\u0057\u0056\u0058\u0039\u0056\u0055\u0042\u0037\u0057\u0044\u004a\u0030\u0041'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0042\u0047\u0055\u0053\u0057\u0057\u0054\u0033\u004b\u0051\u0043\u0048\u0038\u004f\u004b\u0054'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0053\u0032\u004e\u0058\u0057\u0054\u0044\u0033\u0041\u0031\u0059\u004c\u0031\u004d\u004c\u004b'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0050\u0046\u0046\u0031\u0041\u0048\u0032\u0047\u0030\u0042\u0041\u0043\u004f\u0036\u004c\u0056'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0059\u004d\u0057\u004d\u0047\u0047\u0058\u0052\u004d\u0046\u0041\u0036\u0045\u004d\u004f\u0058'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u005a\u0046\u0056\u0031\u0045\u0058\u004e\u005a\u0043\u0056\u0045\u0059\u0035\u0042\u004b\u0036'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0057\u005a\u0041\u0057\u0053\u004b\u0033\u0038\u0042\u0033\u004d\u0057\u005a\u0059\u004d\u004a'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004c\u0058\u0047\u0042\u0051\u004c\u0054\u0034\u0030\u0032\u004c\u0049\u0043\u004c\u0055\u0054'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0052\u0033\u0041\u0052\u0049\u0049\u0030\u0038\u0053\u0031\u0050\u0043\u0055\u0031\u0058\u0047'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u005a\u0039\u004b\u0037\u0036\u0048\u0041\u004c\u0039\u0055\u0051\u0032\u004a\u0043\u004b\u004b'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0036\u0059\u0035\u0038\u0034\u0058\u0045\u004f\u0034\u004c\u004e\u0041\u0052\u0037\u0045\u004a'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0032\u0041\u0047\u0056\u0052\u0039\u004f\u0038\u004f\u0050\u004d\u0057\u0035\u004b\u0041\u004f'] = 3;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0051\u004a\u0048\u004e\u004f\u0048\u0038\u0036\u004f\u0045\u005a\u0041\u005a\u0054\u0041\u0039'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004f\u0055\u0049\u004b\u004c\u0038\u0055\u0059\u0034\u0031\u0049\u0043\u0032\u0047\u0045\u004b'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004e\u004a\u0058\u0051\u0050\u004e\u0051\u0055\u0034\u0048\u005a\u0039\u0043\u0030\u0049\u0055'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0048\u004f\u0054\u0046\u0045\u0051\u0055\u005a\u004c\u0056\u0051\u004e\u0034\u004f\u0052\u004f'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0031\u0049\u005a\u0044\u004d\u0030\u0037\u0039\u0047\u0039\u0043\u0050\u004e\u0049\u0045\u0049'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004c\u0037\u0058\u0047\u004c\u0050\u004e\u0052\u0042\u005a\u0058\u0041\u0059\u005a\u0056\u0042'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004c\u0055\u0049\u004a\u004e\u0048\u0049\u0059\u0058\u0042\u0048\u004c\u0048\u0032\u0056\u0039'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0057\u0030\u0030\u0032\u0044\u004d\u004b\u0030\u0048\u0041\u004f\u0059\u0057\u005a\u0050\u004f'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0031\u0043\u0046\u0031\u0036\u0054\u0053\u0059\u0059\u0055\u0044\u0057\u0052\u0034\u0058\u004f'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0052\u0047\u0057\u0051\u0055\u004f\u0036\u004a\u0048\u0035\u0043\u0030\u004b\u0051\u0057\u0050'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0045\u005a\u0036\u004f\u0058\u0047\u0049\u0038\u0055\u0034\u0030\u004a\u004e\u0045\u004f\u0032'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0053\u0036\u0033\u0044\u004f\u005a\u0051\u0039\u0047\u005a\u0043\u0045\u0055\u0045\u004c\u004e'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0032\u0036\u0057\u0030\u0053\u0047\u0055\u0039\u0051\u004f\u0038\u0058\u0045\u0030\u0043\u0055'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0037\u0030\u0046\u0041\u0031\u0057\u0054\u0047\u004f\u004e\u0055\u0038\u0041\u004a\u0044\u004e'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0037\u0037\u004e\u0057\u0058\u0055\u0053\u0043\u0050\u0042\u0054\u0050\u004e\u004d\u0030\u0058'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0038\u004e\u0036\u0049\u0043\u0049\u0031\u0056\u005a\u0038\u0039\u0045\u0033\u0034\u0036\u004c'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0052\u004e\u004d\u0051\u0054\u0049\u0042\u0045\u005a\u0032\u0049\u0050\u0056\u0044\u004c\u0034'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004a\u0035\u0032\u0047\u0057\u0044\u004a\u0043\u0043\u004c\u0052\u0042\u0033\u005a\u0045\u0047'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0037\u0035\u004f\u0042\u005a\u004d\u004e\u0032\u0048\u0038\u0054\u0038\u0047\u0048\u0035\u0054'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0044\u0038\u0051\u004b\u0058\u0038\u0043\u0050\u004d\u0033\u005a\u004f\u004c\u0039\u004a\u0053'] = 4;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0041\u004b\u0032\u0047\u0031\u004e\u004a\u0042\u004d\u0059\u0031\u0048\u004f\u004a\u0052\u0045'] = 5;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0048\u0059\u0032\u004f\u004b\u0035\u0051\u0031\u0047\u0059\u004b\u0052\u0047\u0052\u0035\u0032'] = 5;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0052\u0051\u0039\u0037\u0033\u0031\u0033\u0031\u004e\u0042\u0032\u0046\u0057\u0038\u004a\u0059'] = 5;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0032\u0047\u0039\u0044\u0050\u0057\u0051\u0039\u0030\u0049\u0039\u004e\u0059\u0048\u0041\u0034'] = 5;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004e\u0045\u004e\u0052\u0048\u004b\u0041\u0042\u0053\u004f\u0042\u0055\u005a\u004f\u0047\u004d'] = 5;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0056\u0047\u004e\u0041\u0037\u0031\u004f\u004c\u0036\u004c\u0059\u0059\u0036\u0052\u004d\u0052'] = 5;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u004e\u0041\u0031\u0052\u0050\u0043\u0035\u004f\u0048\u004c\u0030\u0049\u004a\u0031\u0031\u0056'] = 5;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0039\u004a\u0045\u004d\u0055\u0031\u0052\u004f\u0055\u0054\u0057\u0038\u0037\u0059\u0048\u0051'] = 5;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0050\u005a\u0050\u0050\u0059\u0044\u004c\u0041\u0037\u0052\u0041\u0054\u0036\u0055\u0030\u0039'] = 5;
+_aheSjI['\u004c\u0055\u0043\u004b\u0059\u002d\u0036\u0051\u0036\u0030\u0036\u0055\u0057\u004c\u0056\u0055\u0037\u0041\u0033\u004e\u0039\u0051'] = 5;
+function _Fjmsnd(_YEZAmg){try{return localStorage.getItem(_YEZAmg);}catch(e){return null;}}
+function _LVIdVu(_YEZAmg,v){try{localStorage.setItem(_YEZAmg,v);}catch(e){}}
+function _ddLEGH(_YEZAmg){try{localStorage.removeItem(_YEZAmg);}catch(e){}}
+function _kdGfle(){try{var _prQFnI=_Fjmsnd(_rk);if(!_prQFnI)return [];return JSON.parse(decodeURIComponent(atob(_prQFnI)));}catch(e){return [];}}
+function _MeRpzh(_PI$afW){try{_LVIdVu(_rk,btoa(encodeURIComponent(JSON.stringify(_PI$afW))).replace(/=/g,''));}catch(e){}}
+function _KpLMcN(c){var _eCZJgd=_kdGfle();return _eCZJgd.indexOf(c)!==-1;}
+function _fAQLKH(c){var _eCZJgd=_kdGfle();_eCZJgd.push(c);_MeRpzh(_eCZJgd);}
+function _uqnQTu(){try{var _prQFnI=_Fjmsnd(_sk);if(!_prQFnI)return null;var _gpmmIC=parseInt(atob(_prQFnI),10);return isNaN(_gpmmIC)?null:_gpmmIC;}catch(e){return null;}}
+function _pqziQP(_gpmmIC){try{_LVIdVu(_sk,btoa(_gpmmIC.toString()).replace(/=/g,''));}catch(e){}}
+function _tDuWea(){try{var _prQFnI=_Fjmsnd(_ak);return _prQFnI==='\u0031';}catch(e){return false;}}
+function _DNKgeI(){try{_LVIdVu(_ak,'\u0031');}catch(e){}}
+function _nGqiwe(){try{_ddLEGH(_ak);}catch(e){}}
+function _pxskC$(){try{var _prQFnI=_Fjmsnd(_fk);return _prQFnI==='\u0031';}catch(e){return false;}}
+function _ITtNZP(){try{_LVIdVu(_fk,'\u0031');}catch(e){}}
+function _HaQ_Jt(){try{var _prQFnI=_Fjmsnd(_lk);if(!_prQFnI)return [];return JSON.parse(decodeURIComponent(atob(_prQFnI)));}catch(e){return [];}}
+function _Qgiqhg(_PI$afW){try{_LVIdVu(_lk,btoa(encodeURIComponent(JSON.stringify(_PI$afW))).replace(/=/g,''));}catch(e){}}
+function _VJjrsM(prize,$p){
+var _iBlrDp=_HaQ_Jt();
+var _XiiQEJ=new Date();
+var _kqHMBn=_XiiQEJ.getFullYear()+'\u002d'+(_XiiQEJ.getMonth()+1)+'\u002d'+_XiiQEJ.getDate()+'\u0020'+_XiiQEJ.getHours()+'\u003a'+(_XiiQEJ.getMinutes()<10?'\u0030':'')+_XiiQEJ.getMinutes()+'\u003a'+(_XiiQEJ.getSeconds()<10?'\u0030':'')+_XiiQEJ.getSeconds();
+_iBlrDp.push({prize:prize,$p:$p,time:_kqHMBn});
+_Qgiqhg(_iBlrDp);
 }
-
-// ========== 奖品权重 ==========
-var _pw = [
-{name:'10积分',weight:350,pts:10},
-{name:'20积分',weight:250,pts:20},
-{name:'50积分',weight:150,pts:50},
-{name:'100积分',weight:80,pts:100},
-{name:'谢谢参与',weight:50,pts:0},
-{name:'折扣卡',weight:0,pts:0},
-{name:'测试资格',weight:0,pts:0},
-{name:'神秘大奖',weight:0,pts:0}
+var _pkAFEn = [
+{$n:'\u0031\u0030\u79ef\u5206',$w:350,$p:10},
+{$n:'\u0032\u0030\u79ef\u5206',$w:250,$p:20},
+{$n:'\u0035\u0030\u79ef\u5206',$w:150,$p:50},
+{$n:'\u0031\u0030\u0030\u79ef\u5206',$w:80,$p:100},
+{$n:'\u8c22\u8c22\u53c2\u4e0e',$w:50,$p:0},
+{$n:'\u6298\u6263\u5361',$w:0,$p:0},
+{$n:'\u6d4b\u8bd5\u8d44\u683c',$w:0,$p:0},
+{$n:'\u795e\u79d8\u5927\u5956',$w:0,$p:0}
 ];
-var _tw = _pw.reduce(function(a,b){return a+b.weight;},0);
-
-var _aw = [
-{name:'神秘大奖',weight:400,pts:0},
-{name:'测试资格',weight:300,pts:0},
-{name:'折扣卡',weight:300,pts:0},
-{name:'100积分',weight:1,pts:100},
-{name:'10积分',weight:0,pts:10},
-{name:'20积分',weight:0,pts:20},
-{name:'50积分',weight:0,pts:50},
-{name:'谢谢参与',weight:0,pts:0}
+var _zdkyay = _pkAFEn.reduce(function(a,b){return a+b.$w;},0);
+var _qYYDsB = [
+{$n:'\u795e\u79d8\u5927\u5956',$w:400,$p:0},
+{$n:'\u6d4b\u8bd5\u8d44\u683c',$w:300,$p:0},
+{$n:'\u6298\u6263\u5361',$w:300,$p:0},
+{$n:'\u0031\u0030\u0030\u79ef\u5206',$w:1,$p:100},
+{$n:'\u0031\u0030\u79ef\u5206',$w:0,$p:10},
+{$n:'\u0032\u0030\u79ef\u5206',$w:0,$p:20},
+{$n:'\u0035\u0030\u79ef\u5206',$w:0,$p:50},
+{$n:'\u8c22\u8c22\u53c2\u4e0e',$w:0,$p:0}
 ];
-var _atw = _aw.reduce(function(a,b){return a+b.weight;},0);
-
-function _gp(){
-var pool=isAdmin?_aw:_pw;
-var tw=isAdmin?_atw:_tw;
-var r=Math.random()*tw,acc=0;
-for(var i=0;i<pool.length;i++){acc+=pool[i].weight;if(r<=acc)return pool[i];}
-return pool[0];
+var _SUYJQT = _qYYDsB.reduce(function(a,b){return a+b.$w;},0);
+function _nTvnRO(){
+var _oaeTOd=_oiVgRV?_qYYDsB:_pkAFEn;
+var _oecveG=_oiVgRV?_SUYJQT:_zdkyay;
+var _prQFnI=Math.random()*_oecveG,_iUKKEp=0;
+for(var _gdzUvZ=0;_gdzUvZ<_oaeTOd.length;_gdzUvZ++){_iUKKEp+=_oaeTOd[_gdzUvZ].$w;if(_prQFnI<=_iUKKEp)return _oaeTOd[_gdzUvZ];}
+return _oaeTOd[0];
 }
-
-// ========== 更新界面 ==========
-function _up(){
-var info=document.getElementById('remainInfo');
-var btnStart=document.getElementById('btnStart');
-
-totalRemain=_gt();
-var hasFirst=_gf();
-
-if(!hasFirst){
-info.textContent='剩余抽奖次数：1 次（首次免费）';
-info.style.color='#7A5410';
-btnStart.textContent='抽 奖';
-btnStart.classList.remove('done');
-}else if(totalRemain!==null&&totalRemain>0){
-info.textContent='剩余抽奖次数：'+totalRemain+' 次';
-info.style.color='#7A5410';
-btnStart.textContent='抽 奖';
-btnStart.classList.remove('done');
+function _qGFqdf(){
+var _ipVJIq=document.getElementById('\u0072\u0065\u006d\u0061\u0069\u006e\u0049\u006e\u0066\u006f');
+var _VLBLzx=document.getElementById('\u0062\u0074\u006e\u0053\u0074\u0061\u0072\u0074');
+_IfLBcb=_uqnQTu();
+var _nKTunP=_pxskC$();
+if(!_nKTunP){
+_ipVJIq.textContent='\u5269\u4f59\u62bd\u5956\u6b21\u6570\uff1a\u0031\u0020\u6b21\uff08\u9996\u6b21\u514d\u8d39\uff09';
+_ipVJIq.style.color='\u0023\u0037\u0041\u0035\u0034\u0031\u0030';
+_VLBLzx.textContent='\u62bd\u0020\u5956';
+_VLBLzx.classList.remove('\u0064\u006f\u006e\u0065');
+}else if(_IfLBcb!==null&&_IfLBcb>0){
+_ipVJIq.textContent='\u5269\u4f59\u62bd\u5956\u6b21\u6570\uff1a'+_IfLBcb+'\u0020\u6b21';
+_ipVJIq.style.color='\u0023\u0037\u0041\u0035\u0034\u0031\u0030';
+_VLBLzx.textContent='\u62bd\u0020\u5956';
+_VLBLzx.classList.remove('\u0064\u006f\u006e\u0065');
 }else{
-info.textContent='次数已用完';
-info.style.color='#999';
-btnStart.textContent='已抽完';
-btnStart.classList.add('done');
+_ipVJIq.textContent='\u6b21\u6570\u5df2\u7528\u5b8c';
+_ipVJIq.style.color='\u0023\u0039\u0039\u0039';
+_VLBLzx.textContent='\u5df2\u62bd\u5b8c';
+_VLBLzx.classList.add('\u0064\u006f\u006e\u0065');
 }
-
-// 管理员模式不再显示特殊字样，和普通用户一样显示
 }
-
-// ========== 更新中奖记录 ==========
-function _ur(){
-var list=document.getElementById('recordList');
-var totalDiv=document.getElementById('recordTotal');
-var totalSpan=document.getElementById('totalPoints');
-var logs=_gl();
-
-if(logs.length===0){
-list.innerHTML='<div class="record-empty">暂无记录</div>';
-totalDiv.style.display='none';
+function _OB$rca(){
+var _BkDaUU=document.getElementById('\u0072\u0065\u0063\u006f\u0072\u0064\u004c\u0069\u0073\u0074');
+var _qGWlGg=document.getElementById('\u0072\u0065\u0063\u006f\u0072\u0064\u0054\u006f\u0074\u0061\u006c');
+var _Ot$OGM=document.getElementById('\u0074\u006f\u0074\u0061\u006c\u0050\u006f\u0069\u006e\u0074\u0073');
+var _mjxWkI=_HaQ_Jt();
+if(_mjxWkI.length===0){
+_BkDaUU.innerHTML='\u003c\u0064\u0069\u0076\u0020\u0063\u006c\u0061\u0073\u0073\u003d\u0022\u0072\u0065\u0063\u006f\u0072\u0064\u002d\u0065\u006d\u0070\u0074\u0079\u0022\u003e\u6682\u65e0\u8bb0\u5f55\u003c\u002f\u0064\u0069\u0076\u003e';
+_qGWlGg.style.display='\u006e\u006f\u006e\u0065';
 return;
 }
-
-var html='';
-var totalPts=0;
-for(var i=logs.length-1;i>=0;i--){
-var log=logs[i];
-var ptsStr=log.pts>0?'+'+log.pts+'积分':'';
-html+='<div class="record-item"><div class="record-time">'+log.time+'</div><div><span class="record-prize">'+log.prize+'</span> <span class="record-pts">'+ptsStr+'</span></div></div>';
-totalPts+=log.pts;
+var _XHaMuF='';
+var _bhx$Zt=0;
+for(var _gdzUvZ=_mjxWkI.length-1;_gdzUvZ>=0;_gdzUvZ--){
+var _pdpKff=_mjxWkI[_gdzUvZ];
+var _UF_eWI=_pdpKff.$p>0?'\u002b'+_pdpKff.$p+'\u79ef\u5206':'';
+_XHaMuF+='\u003c\u0064\u0069\u0076\u0020\u0063\u006c\u0061\u0073\u0073\u003d\u0022\u0072\u0065\u0063\u006f\u0072\u0064\u002d\u0069\u0074\u0065\u006d\u0022\u003e\u003c\u0064\u0069\u0076\u0020\u0063\u006c\u0061\u0073\u0073\u003d\u0022\u0072\u0065\u0063\u006f\u0072\u0064\u002d\u0074\u0069\u006d\u0065\u0022\u003e'+_pdpKff.time+'\u003c\u002f\u0064\u0069\u0076\u003e\u003c\u0064\u0069\u0076\u003e\u003c\u0073\u0070\u0061\u006e\u0020\u0063\u006c\u0061\u0073\u0073\u003d\u0022\u0072\u0065\u0063\u006f\u0072\u0064\u002d\u0070\u0072\u0069\u007a\u0065\u0022\u003e'+_pdpKff.prize+'\u003c\u002f\u0073\u0070\u0061\u006e\u003e\u0020\u003c\u0073\u0070\u0061\u006e\u0020\u0063\u006c\u0061\u0073\u0073\u003d\u0022\u0072\u0065\u0063\u006f\u0072\u0064\u002d\u0070\u0074\u0073\u0022\u003e'+_UF_eWI+'\u003c\u002f\u0073\u0070\u0061\u006e\u003e\u003c\u002f\u0064\u0069\u0076\u003e\u003c\u002f\u0064\u0069\u0076\u003e';
+_bhx$Zt+=_pdpKff.$p;
 }
-list.innerHTML=html;
-totalSpan.textContent=totalPts;
-totalDiv.style.display='block';
+_BkDaUU.innerHTML=_XHaMuF;
+_Ot$OGM.textContent=_bhx$Zt;
+_qGWlGg.style.display='\u0062\u006c\u006f\u0063\u006b';
 }
-
-// ========== 清除上次中奖高亮 ==========
-function _clearWin(){
-if(lastWinCell){
-lastWinCell.style.background='';
-lastWinCell.style.borderColor='';
-lastWinCell.style.boxShadow='';
-lastWinCell.style.transform='';
-lastWinCell.style.animation='';
-lastWinCell=null;
+function _vXiOqk(){
+if(_fnoGMb){
+_fnoGMb.style.background='';
+_fnoGMb.style.borderColor='';
+_fnoGMb.style.boxShadow='';
+_fnoGMb.style.transform='';
+_fnoGMb.style.animation='';
+_fnoGMb=null;
 }
 }
-
-// ========== 防调试 ==========
-document.addEventListener('keydown',function(e){
-var k=e.key,ct=e.ctrlKey,s=e.shiftKey;
-if(k==='F12'||(ct&&s&&(k==='I'||k==='J'))||(ct&&k==='U')){e.preventDefault();return false;}
+document.addEventListener('\u006b\u0065\u0079\u0064\u006f\u0077\u006e',function(e){
+var _YEZAmg=e.key,_gQBwBA=e.ctrlKey,_DUdRPP=e.shiftKey;
+if(_YEZAmg==='\u0046\u0031\u0032'||(_gQBwBA&&_DUdRPP&&(_YEZAmg==='\u0049'||_YEZAmg==='\u004a'))||(_gQBwBA&&_YEZAmg==='\u0055')){e.preventDefault();return false;}
 });
-document.addEventListener('contextmenu',function(e){e.preventDefault();return false;});
-
-// ========== 侧边记录面板展开/收起 ==========
-var recordOpen=false;
-document.getElementById('recordToggle').addEventListener('click',function(){
-recordOpen=!recordOpen;
-document.getElementById('recordPanel').classList.toggle('show',recordOpen);
+document.addEventListener('\u0063\u006f\u006e\u0074\u0065\u0078\u0074\u006d\u0065\u006e\u0075',function(e){e.preventDefault();return false;});
+var _IhyfJs=false;
+document.getElementById('\u0072\u0065\u0063\u006f\u0072\u0064\u0054\u006f\u0067\u0067\u006c\u0065').addEventListener('\u0063\u006c\u0069\u0063\u006b',function(){
+_IhyfJs=!_IhyfJs;
+document.getElementById('\u0072\u0065\u0063\u006f\u0072\u0064\u0050\u0061\u006e\u0065\u006c').classList.toggle('\u0073\u0068\u006f\u0077',_IhyfJs);
 });
-
-// ========== 标题点击触发卡密兑换弹窗（5次）==========
-var titleClickCount=0;
-var titleClickTimer=null;
-document.getElementById('titleTrigger').addEventListener('click',function(){
-titleClickCount++;
-if(titleClickTimer)clearTimeout(titleClickTimer);
-titleClickTimer=setTimeout(function(){titleClickCount=0;},3000);
-if(titleClickCount>=5){
-titleClickCount=0;
-var code=prompt('请输入卡密兑换抽奖次数：');
-if(code===null||code==='')return;
-code=code.trim().toUpperCase();
-
-if(code==='ADMIN'){
-isAdmin=true;
-_sa();
-_clearWin();
-_up();
-_ur();
-alert('👑 管理员模式已开启');
+var _JmTPSI=0;
+var _AoCLrZ=null;
+document.getElementById('\u0074\u0069\u0074\u006c\u0065\u0054\u0072\u0069\u0067\u0067\u0065\u0072').addEventListener('\u0063\u006c\u0069\u0063\u006b',function(){
+_JmTPSI++;
+if(_AoCLrZ)clearTimeout(_AoCLrZ);
+_AoCLrZ=setTimeout(function(){_JmTPSI=0;},3000);
+if(_JmTPSI>=5){
+_JmTPSI=0;
+var _IWUSmT=prompt('\u8bf7\u8f93\u5165\u5361\u5bc6\u5151\u6362\u62bd\u5956\u6b21\u6570\uff1a');
+if(_IWUSmT===null||_IWUSmT==='')return;
+_IWUSmT=_IWUSmT.trim().toUpperCase();
+if(_IWUSmT==='\u0041\u0044\u004d\u0049\u004e'){
+_oiVgRV=true;
+_DNKgeI();
+_vXiOqk();
+_qGFqdf();
+_OB$rca();
+alert('\u1f451\u0020\u7ba1\u7406\u5458\u6a21\u5f0f\u5df2\u5f00\u542f');
 return;
 }
-if(code==='ADMINOFF'){
-isAdmin=false;
-_ra();
-_clearWin();
-_up();
-_ur();
-alert('管理员模式已关闭');
+if(_IWUSmT==='\u0041\u0044\u004d\u0049\u004e\u004f\u0046\u0046'){
+_oiVgRV=false;
+_nGqiwe();
+_vXiOqk();
+_qGFqdf();
+_OB$rca();
+alert('\u7ba1\u7406\u5458\u6a21\u5f0f\u5df2\u5173\u95ed');
 return;
 }
-
-var times=_cdb[code];
-if(times===undefined){alert('❌ 卡密无效');return;}
-if(_ic(code)){alert('❌ 该卡密已被兑换');return;}
-
-_ac(code);
-var cur=_gt()||0;
-if(cur===null)cur=0;
-_st(cur+times);
-_clearWin();
-_up();
-alert('✅ 兑换成功！获得 '+times+' 次抽奖机会');
+var _tzQPxC=_aheSjI[_IWUSmT];
+if(_tzQPxC===undefined){alert('\u274c\u0020\u5361\u5bc6\u65e0\u6548');return;}
+if(_KpLMcN(_IWUSmT)){alert('\u274c\u0020\u8be5\u5361\u5bc6\u5df2\u88ab\u5151\u6362');return;}
+_fAQLKH(_IWUSmT);
+var _FzPDjq=_uqnQTu()||0;
+if(_FzPDjq===null)_FzPDjq=0;
+_pqziQP(_FzPDjq+_tzQPxC);
+_vXiOqk();
+_qGFqdf();
+alert('\u2705\u0020\u5151\u6362\u6210\u529f\uff01\u83b7\u5f97\u0020'+_tzQPxC+'\u0020\u6b21\u62bd\u5956\u673a\u4f1a');
 }
 });
-
-// ========== 神秘大奖格子点击触发管理员入口（15次）==========
-var mysteryClickCount=0;
-var mysteryClickTimer=null;
-document.getElementById('mysteryCell').addEventListener('click',function(){
-mysteryClickCount++;
-if(mysteryClickTimer)clearTimeout(mysteryClickTimer);
-mysteryClickTimer=setTimeout(function(){mysteryClickCount=0;},5000);
-if(mysteryClickCount>=15){
-mysteryClickCount=0;
-var code=prompt('请输入卡密兑换抽奖次数：');
-if(code===null||code==='')return;
-code=code.trim().toUpperCase();
-
-if(code==='ADMIN'){
-isAdmin=true;
-_sa();
-_clearWin();
-_up();
-_ur();
-alert('👑 管理员模式已开启');
+var _aWZkSB=0;
+var _vrjnWv=null;
+document.getElementById('\u006d\u0079\u0073\u0074\u0065\u0072\u0079\u0043\u0065\u006c\u006c').addEventListener('\u0063\u006c\u0069\u0063\u006b',function(){
+_aWZkSB++;
+if(_vrjnWv)clearTimeout(_vrjnWv);
+_vrjnWv=setTimeout(function(){_aWZkSB=0;},5000);
+if(_aWZkSB>=15){
+_aWZkSB=0;
+var _IWUSmT=prompt('\u8bf7\u8f93\u5165\u5361\u5bc6\u5151\u6362\u62bd\u5956\u6b21\u6570\uff1a');
+if(_IWUSmT===null||_IWUSmT==='')return;
+_IWUSmT=_IWUSmT.trim().toUpperCase();
+if(_IWUSmT==='\u0041\u0044\u004d\u0049\u004e'){
+_oiVgRV=true;
+_DNKgeI();
+_vXiOqk();
+_qGFqdf();
+_OB$rca();
+alert('\u1f451\u0020\u7ba1\u7406\u5458\u6a21\u5f0f\u5df2\u5f00\u542f');
 return;
 }
-if(code==='ADMINOFF'){
-isAdmin=false;
-_ra();
-_clearWin();
-_up();
-_ur();
-alert('管理员模式已关闭');
+if(_IWUSmT==='\u0041\u0044\u004d\u0049\u004e\u004f\u0046\u0046'){
+_oiVgRV=false;
+_nGqiwe();
+_vXiOqk();
+_qGFqdf();
+_OB$rca();
+alert('\u7ba1\u7406\u5458\u6a21\u5f0f\u5df2\u5173\u95ed');
 return;
 }
-
-var times=_cdb[code];
-if(times===undefined){alert('❌ 卡密无效');return;}
-if(_ic(code)){alert('❌ 该卡密已被兑换');return;}
-
-_ac(code);
-var cur=_gt()||0;
-if(cur===null)cur=0;
-_st(cur+times);
-_clearWin();
-_up();
-alert('✅ 兑换成功！获得 '+times+' 次抽奖机会');
+var _tzQPxC=_aheSjI[_IWUSmT];
+if(_tzQPxC===undefined){alert('\u274c\u0020\u5361\u5bc6\u65e0\u6548');return;}
+if(_KpLMcN(_IWUSmT)){alert('\u274c\u0020\u8be5\u5361\u5bc6\u5df2\u88ab\u5151\u6362');return;}
+_fAQLKH(_IWUSmT);
+var _FzPDjq=_uqnQTu()||0;
+if(_FzPDjq===null)_FzPDjq=0;
+_pqziQP(_FzPDjq+_tzQPxC);
+_vXiOqk();
+_qGFqdf();
+alert('\u2705\u0020\u5151\u6362\u6210\u529f\uff01\u83b7\u5f97\u0020'+_tzQPxC+'\u0020\u6b21\u62bd\u5956\u673a\u4f1a');
 }
 });
-
-// ========== 测试资格格子点击刷新次数（管理员模式）==========
-document.getElementById('testCell').addEventListener('click',function(){
-if(!isAdmin)return;
-var newCount=Math.floor(Math.random()*10)+1;
-_st(newCount);
-_clearWin();
-_up();
+document.getElementById('\u0074\u0065\u0073\u0074\u0043\u0065\u006c\u006c').addEventListener('\u0063\u006c\u0069\u0063\u006b',function(){
+if(!_oiVgRV)return;
+var _HChpoe=Math.floor(Math.random()*10)+1;
+_pqziQP(_HChpoe);
+_vXiOqk();
+_qGFqdf();
 });
-
-// ========== 折扣卡格子点击扣除次数（管理员模式）==========
-document.getElementById('discountCell').addEventListener('click',function(){
-if(!isAdmin)return;
-var ac=_gt()||0;
-if(ac>0){
-_st(ac-1);
-_clearWin();
-_up();
+document.getElementById('\u0064\u0069\u0073\u0063\u006f\u0075\u006e\u0074\u0043\u0065\u006c\u006c').addEventListener('\u0063\u006c\u0069\u0063\u006b',function(){
+if(!_oiVgRV)return;
+var _vbLJoL=_uqnQTu()||0;
+if(_vbLJoL>0){
+_pqziQP(_vbLJoL-1);
+_vXiOqk();
+_qGFqdf();
 }
 });
-
-// ========== 谢谢参与格子点击30次重置卡密（用户模式）==========
-var thanksClickCount=0;
-var thanksClickTimer=null;
-document.getElementById('thanksCell').addEventListener('click',function(){
-if(isAdmin)return;
-thanksClickCount++;
-if(thanksClickTimer)clearTimeout(thanksClickTimer);
-thanksClickTimer=setTimeout(function(){thanksClickCount=0;},5000);
-if(thanksClickCount>=30){
-thanksClickCount=0;
-var code=prompt('请输入重置代码：');
-if(code===null||code==='')return;
-// 重置代码：RESETCARDS
-if(code==='RESETCARDS'){
-_sr([]);
-alert('✅ 已重置所有卡密，可以重新兑换');
+var _gfygww=0;
+var _MqZcUD=null;
+document.getElementById('\u0074\u0068\u0061\u006e\u006b\u0073\u0043\u0065\u006c\u006c').addEventListener('\u0063\u006c\u0069\u0063\u006b',function(){
+if(_oiVgRV)return;
+_gfygww++;
+if(_MqZcUD)clearTimeout(_MqZcUD);
+_MqZcUD=setTimeout(function(){_gfygww=0;},5000);
+if(_gfygww>=30){
+_gfygww=0;
+var _IWUSmT=prompt('\u8bf7\u8f93\u5165\u91cd\u7f6e\u4ee3\u7801\uff1a');
+if(_IWUSmT===null||_IWUSmT==='')return;
+if(_IWUSmT==='\u0052\u0045\u0053\u0045\u0054\u0043\u0041\u0052\u0044\u0053'){
+_MeRpzh([]);
+alert('\u2705\u0020\u5df2\u91cd\u7f6e\u6240\u6709\u5361\u5bc6\uff0c\u53ef\u4ee5\u91cd\u65b0\u5151\u6362');
 }else{
-alert('❌ 重置代码错误');
+alert('\u274c\u0020\u91cd\u7f6e\u4ee3\u7801\u9519\u8bef');
 }
 }
 });
-
-// ========== 抽奖 ==========
-document.getElementById('btnStart').addEventListener('click',function(){
-// 抽奖中禁止点击
-if(isRunning){
-alert('⏳ 正在抽奖中，请稍候...');
+document.getElementById('\u0062\u0074\u006e\u0053\u0074\u0061\u0072\u0074').addEventListener('\u0063\u006c\u0069\u0063\u006b',function(){
+if(_OhbVrp){
+alert('\u23f3\u0020\u6b63\u5728\u62bd\u5956\u4e2d\uff0c\u8bf7\u7a0d\u5019\u002e\u002e\u002e');
 return;
 }
-
-var hasFirst=_gf();
-var cur=_gt();
-console.log('点击抽奖按钮，hasFirst='+hasFirst+', cur='+cur);
-
-if(!hasFirst){
-_sf();
-_st(0);
-}else if(cur===null||cur<=0){
-alert('次数已用完');
+var _nKTunP=_pxskC$();
+var _FzPDjq=_uqnQTu();
+if(!_nKTunP){
+_ITtNZP();
+_pqziQP(0);
+}else if(_FzPDjq===null||_FzPDjq<=0){
+alert('\u6b21\u6570\u5df2\u7528\u5b8c');
 return;
 }else{
-_st(cur-1);
+_pqziQP(_FzPDjq-1);
 }
-
-isRunning=true;
-
-var resultText=document.getElementById('resultText');
-var btnStart=document.getElementById('btnStart');
-
-resultText.innerHTML='';
-btnStart.textContent='...';
-
-// 清除上次中奖高亮
-_clearWin();
-
-var prizeObj=_gp();
-var winName=prizeObj.name;
-
-var cells=document.querySelectorAll('#lotteryGrid .prize-cell');
-var cellsArr=Array.from(cells);
-
-// 找到中奖格子索引
-var winIdx=-1;
-for(var i=0;i<cellsArr.length;i++){
-if(cellsArr[i].getAttribute('data-p')===winName){winIdx=i;break;}
+_OhbVrp=true;
+var _oiGFfW=document.getElementById('\u0072\u0065\u0073\u0075\u006c\u0074\u0054\u0065\u0078\u0074');
+var _VLBLzx=document.getElementById('\u0062\u0074\u006e\u0053\u0074\u0061\u0072\u0074');
+_oiGFfW.innerHTML='';
+_VLBLzx.textContent='\u002e\u002e\u002e';
+_vXiOqk();
+var _$ONxKm=_nTvnRO();
+var _TecQoX=_$ONxKm.$n;
+var _dhjOkY=document.querySelectorAll('\u0023\u006c\u006f\u0074\u0074\u0065\u0072\u0079\u0047\u0072\u0069\u0064\u0020\u002e\u0070\u0072\u0069\u007a\u0065\u002d\u0063\u0065\u006c\u006c');
+var _DO$xkx=Array.from(_dhjOkY);
+var _sfogyr=-1;
+for(var _gdzUvZ=0;_gdzUvZ<_DO$xkx.length;_gdzUvZ++){
+if(_DO$xkx[_gdzUvZ].getAttribute('\u0064\u0061\u0074\u0061\u002d\u0070')===_TecQoX){_sfogyr=_gdzUvZ;break;}
 }
-if(winIdx===-1)winIdx=0;
-
-// 清除所有样式
-for(var i=0;i<cellsArr.length;i++){
-cellsArr[i].style.background='';
-cellsArr[i].style.borderColor='';
-cellsArr[i].style.boxShadow='';
-cellsArr[i].style.transform='';
-cellsArr[i].style.animation='';
+if(_sfogyr===-1)_sfogyr=0;
+for(var _gdzUvZ=0;_gdzUvZ<_DO$xkx.length;_gdzUvZ++){
+_DO$xkx[_gdzUvZ].style.background='';
+_DO$xkx[_gdzUvZ].style.borderColor='';
+_DO$xkx[_gdzUvZ].style.boxShadow='';
+_DO$xkx[_gdzUvZ].style.transform='';
+_DO$xkx[_gdzUvZ].style.animation='';
 }
-
-// 动画参数
-var totalRounds=Math.floor(Math.random()*4)+3;
-var totalSteps=cellsArr.length*totalRounds+winIdx+1;
-var curIdx=0,prevIdx=-1,stepCount=0,baseSpeed=80;
-
-function highlight(){
-if(prevIdx>=0&&prevIdx<cellsArr.length){
-cellsArr[prevIdx].style.background='';
-cellsArr[prevIdx].style.borderColor='';
-cellsArr[prevIdx].style.boxShadow='';
-cellsArr[prevIdx].style.transform='';
+var _$XXdo_=Math.floor(Math.random()*4)+3;
+var _cZuzre=_DO$xkx.length*_$XXdo_+_sfogyr+1;
+var _wnQrSR=0,_PeMOkI=-1,_UpkDyr=0,_OSJoRu=80;
+function _VCJTBJ(){
+if(_PeMOkI>=0&&_PeMOkI<_DO$xkx.length){
+_DO$xkx[_PeMOkI].style.background='';
+_DO$xkx[_PeMOkI].style.borderColor='';
+_DO$xkx[_PeMOkI].style.boxShadow='';
+_DO$xkx[_PeMOkI].style.transform='';
 }
-
-cellsArr[curIdx].style.background='linear-gradient(135deg,#FFE0D0,#FFC0A0)';
-cellsArr[curIdx].style.borderColor='#E8341C';
-cellsArr[curIdx].style.boxShadow='0 0 18px rgba(232,52,28,.45)';
-cellsArr[curIdx].style.transform='scale(1.06)';
-
-prevIdx=curIdx;
-stepCount++;
-
-if(stepCount>=totalSteps){
-// 清除所有
-for(var i=0;i<cellsArr.length;i++){
-cellsArr[i].style.background='';
-cellsArr[i].style.borderColor='';
-cellsArr[i].style.boxShadow='';
-cellsArr[i].style.transform='';
-cellsArr[i].style.animation='';
+_DO$xkx[_wnQrSR].style.background='\u006c\u0069\u006e\u0065\u0061\u0072\u002d\u0067\u0072\u0061\u0064\u0069\u0065\u006e\u0074\u0028\u0031\u0033\u0035\u0064\u0065\u0067\u002c\u0023\u0046\u0046\u0045\u0030\u0044\u0030\u002c\u0023\u0046\u0046\u0043\u0030\u0041\u0030\u0029';
+_DO$xkx[_wnQrSR].style.borderColor='\u0023\u0045\u0038\u0033\u0034\u0031\u0043';
+_DO$xkx[_wnQrSR].style.boxShadow='\u0030\u0020\u0030\u0020\u0031\u0038\u0070\u0078\u0020\u0072\u0067\u0062\u0061\u0028\u0032\u0033\u0032\u002c\u0035\u0032\u002c\u0032\u0038\u002c\u002e\u0034\u0035\u0029';
+_DO$xkx[_wnQrSR].style.transform='\u0073\u0063\u0061\u006c\u0065\u0028\u0031\u002e\u0030\u0036\u0029';
+_PeMOkI=_wnQrSR;
+_UpkDyr++;
+if(_UpkDyr>=_cZuzre){
+for(var _gdzUvZ=0;_gdzUvZ<_DO$xkx.length;_gdzUvZ++){
+_DO$xkx[_gdzUvZ].style.background='';
+_DO$xkx[_gdzUvZ].style.borderColor='';
+_DO$xkx[_gdzUvZ].style.boxShadow='';
+_DO$xkx[_gdzUvZ].style.transform='';
+_DO$xkx[_gdzUvZ].style.animation='';
 }
-
-// 高亮中奖格子（常亮，不熄灭）
-var winCell=cellsArr[winIdx];
-winCell.style.background='linear-gradient(135deg,#FFD700,#FFA500)';
-winCell.style.borderColor='#FF4500';
-winCell.style.boxShadow='0 0 30px rgba(255,215,0,.9),0 0 60px rgba(255,140,0,.5)';
-winCell.style.transform='scale(1.12)';
-winCell.style.animation='winGlow 0.6s ease-in-out infinite alternate';
-lastWinCell=winCell;
-
-resultText.innerHTML='<span class="result-big">🎉 恭喜获得</span><span class="result-prize">'+winName+'</span>';
-resultText.style.animation='resultBounce 0.5s ease-out';
-
-// 记录中奖（动画结束后）
-console.log('动画结束，中奖：'+winName+', 积分：'+prizeObj.pts);
-_al(winName,prizeObj.pts);
-_ur();
-
-_up();
-if(totalRemain>=1){
-btnStart.textContent='再抽一次';
-btnStart.classList.remove('done');
+var _RBMeyy=_DO$xkx[_sfogyr];
+_RBMeyy.style.background='\u006c\u0069\u006e\u0065\u0061\u0072\u002d\u0067\u0072\u0061\u0064\u0069\u0065\u006e\u0074\u0028\u0031\u0033\u0035\u0064\u0065\u0067\u002c\u0023\u0046\u0046\u0044\u0037\u0030\u0030\u002c\u0023\u0046\u0046\u0041\u0035\u0030\u0030\u0029';
+_RBMeyy.style.borderColor='\u0023\u0046\u0046\u0034\u0035\u0030\u0030';
+_RBMeyy.style.boxShadow='\u0030\u0020\u0030\u0020\u0033\u0030\u0070\u0078\u0020\u0072\u0067\u0062\u0061\u0028\u0032\u0035\u0035\u002c\u0032\u0031\u0035\u002c\u0030\u002c\u002e\u0039\u0029\u002c\u0030\u0020\u0030\u0020\u0036\u0030\u0070\u0078\u0020\u0072\u0067\u0062\u0061\u0028\u0032\u0035\u0035\u002c\u0031\u0034\u0030\u002c\u0030\u002c\u002e\u0035\u0029';
+_RBMeyy.style.transform='\u0073\u0063\u0061\u006c\u0065\u0028\u0031\u002e\u0031\u0032\u0029';
+_RBMeyy.style.animation='\u0077\u0069\u006e\u0047\u006c\u006f\u0077\u0020\u0030\u002e\u0036\u0073\u0020\u0065\u0061\u0073\u0065\u002d\u0069\u006e\u002d\u006f\u0075\u0074\u0020\u0069\u006e\u0066\u0069\u006e\u0069\u0074\u0065\u0020\u0061\u006c\u0074\u0065\u0072\u006e\u0061\u0074\u0065';
+_fnoGMb=_RBMeyy;
+_oiGFfW.innerHTML='\u003c\u0073\u0070\u0061\u006e\u0020\u0063\u006c\u0061\u0073\u0073\u003d\u0022\u0072\u0065\u0073\u0075\u006c\u0074\u002d\u0062\u0069\u0067\u0022\u003e\u1f389\u0020\u606d\u559c\u83b7\u5f97\u003c\u002f\u0073\u0070\u0061\u006e\u003e\u003c\u0073\u0070\u0061\u006e\u0020\u0063\u006c\u0061\u0073\u0073\u003d\u0022\u0072\u0065\u0073\u0075\u006c\u0074\u002d\u0070\u0072\u0069\u007a\u0065\u0022\u003e'+_TecQoX+'\u003c\u002f\u0073\u0070\u0061\u006e\u003e';
+_oiGFfW.style.animation='\u0072\u0065\u0073\u0075\u006c\u0074\u0042\u006f\u0075\u006e\u0063\u0065\u0020\u0030\u002e\u0035\u0073\u0020\u0065\u0061\u0073\u0065\u002d\u006f\u0075\u0074';
+_VJjrsM(_TecQoX,_$ONxKm.$p);
+_OB$rca();
+_qGFqdf();
+if(_IfLBcb>=1){
+_VLBLzx.textContent='\u518d\u62bd\u4e00\u6b21';
+_VLBLzx.classList.remove('\u0064\u006f\u006e\u0065');
 }else{
-btnStart.textContent='已抽完';
-btnStart.classList.add('done');
+_VLBLzx.textContent='\u5df2\u62bd\u5b8c';
+_VLBLzx.classList.add('\u0064\u006f\u006e\u0065');
 }
-
-isRunning=false;
+_OhbVrp=false;
 return;
 }
-
-var remaining=totalSteps-stepCount;
-var speed=baseSpeed;
-if(remaining<cellsArr.length*2){
-var slowdown=(cellsArr.length*2-remaining)/(cellsArr.length*2);
-speed=baseSpeed+slowdown*120;
+var _MDHqJa=_cZuzre-_UpkDyr;
+var _RUhRIW=_OSJoRu;
+if(_MDHqJa<_DO$xkx.length*2){
+var _rXPvhs=(_DO$xkx.length*2-_MDHqJa)/(_DO$xkx.length*2);
+_RUhRIW=_OSJoRu+_rXPvhs*120;
 }
-
-setTimeout(highlight,speed);
-curIdx=(curIdx+1)%cellsArr.length;
+setTimeout(_VCJTBJ,_RUhRIW);
+_wnQrSR=(_wnQrSR+1)%_DO$xkx.length;
 }
-
-highlight();
+_VCJTBJ();
 });
-
-// ========== 初始化 ==========
-if(_ga()){isAdmin=true;}
-_up();
-_ur();
-})();
-</script>
+if(_tDuWea()){_oiVgRV=true;}
+_qGFqdf();
+_OB$rca();
+})();</script>
 </body>
 </html>
